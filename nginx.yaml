@@ -1,0 +1,104 @@
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: sw-pv
+spec:
+  accessModes:
+    - ReadWriteOnce
+  capacity:
+    storage: 1Gi
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: nfs-sw
+  nfs:
+    path: /public/sw
+    server: 192.168.0.170
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: sw-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: nfs-sw
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: nginx-test
+  labels:
+    name: nginx-test
+spec:
+  replicas: 1 
+  selector:
+    name: nginx-test
+  template:
+    metadata:
+      labels: 
+       name: nginx-test
+    spec:
+     # initContainers:
+     # - image: 192.168.0.170:8802/dev/sky-agent:latest
+     #   name: sw-agent-sidecar
+     #   imagePullPolicy: IfNotPresent
+     #   command: ['cp','-fr','/agent','tmp']
+     #   volumeMounts:
+     #   - mountPath: /tmp
+     #     name: sw-agent-volume
+      containers:
+      - name: nginx-test
+        image: 192.168.0.170:8802/dev/sys-plat
+        env:
+          - name: "TIME_ZONE"
+            value: "Asia/Shanghai"
+          - name: "spring.cloud.nacos.server-addr"
+            value: "192.168.0.170:30112"
+          - name: "spring.cloud.nacos.discovery.namespace"
+            value: "d2f20d3a-e9e5-4bd1-979b-42a33d99370c"
+          - name: "spring.cloud.nacos.config.namespace"
+            value: "d2f20d3a-e9e5-4bd1-979b-42a33d99370c"
+          - name: "spring.cloud.nacos.config.file-extension"
+            value: "yaml"
+          - name: "server.port"
+            value: "9901"
+          - name: "spring.application.name"
+            value: "system_platform"
+        #  - name: "skywalking.agent.service_name"
+        #    value: "sys_plat"
+        #  - name: "skywalking.collector.backend_service"
+        #    value: "oap.skywalking:11800"
+        #  - name: "JAVA_OPTS"
+        #    value: "-javaagent:/skywalking-agent/agent/skywalking-agent.jar"
+        #  - name: "SW_AGENT_COLLECTOR_BACKEND_SERVICES"
+        #    value: "192.168.60.228:11800"
+        ports:
+        - containerPort: 9901
+        volumeMounts:
+        - mountPath: /tmp
+          name: sw-agent-volume
+      volumes:
+      - name: sw-agent-volume
+        persistentVolumeClaim:
+          claimName: sw-pvc
+       # emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-test
+  labels: 
+    name: nginx-test
+spec:
+  type: NodePort
+  ports:
+  - port: 9901
+    protocol: TCP
+    targetPort: 9901
+    name: http
+    nodePort: 31009
+  selector:
+    name: nginx-test
