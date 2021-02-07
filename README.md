@@ -1,7 +1,8 @@
 # skywalking
 1.agent
 Agent是skywalking集成到java项目必须的，可以直接从官方下载解压，下载地址为：
-https://archive.apache.org/dist/skywalking/8.3.0/apache-skywalking-apm-es7-8.3.0.tar.gz，这里需要注意一下有版本问题，不同agent版本可能导致无法集成java项目，比如7.0.0版本，为了避免采坑，这里给出的是一个可用的版本，下载完之后将agent包挂载到k8s的挂载路径下即可，如本代码中的地址是/public/sw/下，不用做任何修改！
+https://archive.apache.org/dist/skywalking/8.3.0/apache-skywalking-apm-es7-8.3.0.tar.gz，
+这里需要注意一下有版本问题，不同agent版本可能导致无法集成java项目，比如7.0.0版本，为了避免采坑，这里给出的是一个可用的版本，下载完之后将agent包挂载到k8s的挂载路径下即可，如本代码中的地址是/public/sw/下，不用做任何修改！
 
 2.Dockerfile
 Dockerfile中需要注意的是在ENTRYPOINT中必须添加三个参数：
